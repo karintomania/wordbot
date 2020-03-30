@@ -13,17 +13,9 @@ import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@LineMessageHandler
 public class WordsApplication {
 
-	@Autowired
-	WordService ws;
 	public static void main(String[] args) {
 		SpringApplication.run(WordsApplication.class, args);
 	}
-    @EventMapping
-    public Message handleTextMessageEvent(MessageEvent<TextMessageContent> event) {
-		// final String originalMessageText = event.getMessage().getText();
-        return new TextMessage(ws.getRandomWord());
-    }
 }
