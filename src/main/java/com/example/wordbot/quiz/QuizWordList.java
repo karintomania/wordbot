@@ -14,7 +14,11 @@ public class QuizWordList{
 	List<Word> words;
 
 	public Word getAnswerWord(){
-		return this.words.get(answerOptionNum);
+		return this.words.get(this.answerOptionNum);
+	}
+
+	public Word getUserWord(){
+		return this.words.get(this.userOptionNum);
 	}
 }
 

@@ -37,11 +37,9 @@ public class QuizMessageSupplier implements Supplier<FlexMessage> {
 	@Autowired
 	WordMapper wm;
 
-	private final Random rnd = new Random();
 
 	public FlexMessage getQuizMessage(final QuizWordList qwl) {
-		final Word answer = qwl.getAnswerWord();
-		final Box bodyBlock = createBodyBlock(answer);
+		final Box bodyBlock = createBodyBlock(qwl);
 		final Box footerBlock = createFooterBlock(qwl.getWords());
 		final Bubble bubble =
 				Bubble.builder()
@@ -59,18 +57,29 @@ public class QuizMessageSupplier implements Supplier<FlexMessage> {
 		return null;
     }
 
-    private Box createBodyBlock(Word answer) {
+    private Box createBodyBlock(QuizWordList qwl) {
         final Text title =
                 Text.builder()
-                    .text(answer.getWord())
+                    .text(qwl.getAnswerWord().getWord())
                     .weight(TextWeight.BOLD)
                     .size(FlexFontSize.XL)
                     .build();
 
+		String questionStr = "Choose the meaning of the word." 
+							+ Const.LINE_SEP
+							+ Const.LINE_SEP;
+
+		int i = 0;
+		for(Word w : qwl.getWords()){
+			questionStr += Integer.toString(i) + "-" + w.getDefinition()+ Const.LINE_SEP;
+			i++;
+		}
+
         final Text question =
                 Text.builder()
-                    .text("Choose the meaning of the word.")
-                    .weight(TextWeight.BOLD)
+                    .text(questionStr)
+					.weight(TextWeight.BOLD)
+					.wrap(true)
                     .size(FlexFontSize.Md)
                     .build();
 
@@ -84,7 +93,8 @@ public class QuizMessageSupplier implements Supplier<FlexMessage> {
 		List<FlexComponent> buttons = new ArrayList<FlexComponent>();
 
 		for(int i = 0; i < words.size(); i++){
-			final String option = Integer.toString(i) + " : " + words.get(i).getDefinition();
+			// final String option = Integer.toString(i) + " : " + words.get(i).getDefinition();
+			final String option = Integer.toString(i);
 			final Button btn = Button
 					.builder()
 					.offsetStart(FlexOffsetSize.SM)

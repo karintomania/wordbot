@@ -41,10 +41,11 @@ public class WordService{
 
 		// 重複なし乱数を生成
 		HashSet<Integer> optionIds = new HashSet<Integer>();
+
 		// Word全件数を取得
 		int count = wm.countRecordNum();
 		while(optionIds.size() < Const.Quiz.OPTION_NUM){
-			optionIds.add(rnd.nextInt(count));
+			optionIds.add(rnd.nextInt(count)+1);
 		}
 
 		// 取得した乱数からWordを取得

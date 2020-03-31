@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.example.wordbot.Const;
+import com.example.wordbot.quiz.QuizWordList;
 import com.example.wordbot.quiz.Report;
 import com.linecorp.bot.model.action.MessageAction;
 import com.linecorp.bot.model.message.FlexMessage;
@@ -25,9 +26,9 @@ import com.linecorp.bot.model.message.flex.unit.FlexMarginSize;
 public class ReportMessageSupplier implements Supplier<FlexMessage> {
 
 	
-    public FlexMessage getReportMessage(List<Report> reports) {
+    public FlexMessage getReportMessage(List<QuizWordList> qwls) {
 
-        final Box bodyBlock = createBodyBlock(reports);
+        final Box bodyBlock = createBodyBlock(qwls);
         final Box footerBlock = createFooterBlock();
         final Bubble bubble =
                 Bubble.builder()
@@ -46,9 +47,11 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
 	
 
 
-    private Box createBodyBlock(List<Report> reports) {
+    private Box createBodyBlock(List<QuizWordList> qwls) {
 		List<FlexComponent> components = new ArrayList<FlexComponent>();
-		Report tmpReport;
+		int i = 0;
+
+		// title
         final Text title =
                 Text.builder()
                     .text("Result")
@@ -57,27 +60,26 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
 					.build();
 		components.add(title);
 
-		for(int i = 0; i < reports.size(); i++){
-			tmpReport = reports.get(i);
+		Text result;
+		Text answer;
+		String answerTxt;
 
-			
-			final Text result;
-			final Text answer;
-			final String answerTxt;
+		for(QuizWordList qwl : qwls){
 
-			if(tmpReport.isCorrect()){
+			if(qwl.getAnswerOptionNum() == qwl.getUserOptionNum()){
 				result = Text.builder()
-						.text("Q"+ Integer.toString(i) + ": " + tmpReport.getAnswerWord() + " Correct!")
+						.text("Q"+ Integer.toString(i) + ": " + qwl.getAnswerWord().getWord() + " Correct!")
 						.weight(TextWeight.BOLD)
 						.size(FlexFontSize.Md)
 						.build();
 
-				answerTxt = tmpReport.getAnswerWord() + "-" + tmpReport.getAnswerDefinition();
+				answerTxt = qwl.getAnswerOptionNum() + "-" + qwl.getAnswerWord().getDefinition();
 
 				answer =
 						Text.builder()
 							.text(answerTxt)
 							.weight(TextWeight.BOLD)
+							.wrap(true)
 							.size(FlexFontSize.SM)
 							.build();
 
@@ -85,22 +87,23 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
 
 				result =
 						Text.builder()
-							.text("Q"+ Integer.toString(i) + ": " + tmpReport.getAnswerWord() + " Wrong...")
+							.text("Q"+ Integer.toString(i) + ": " + qwl.getAnswerWord().getWord() + " Wrong...")
 							.weight(TextWeight.BOLD)
 							.size(FlexFontSize.Md)
 							.build();
 
 				answerTxt = 
-							tmpReport.getAnswerWord() + "-" + tmpReport.getAnswerDefinition() +
+							qwl.getAnswerOptionNum() + "-" + qwl.getAnswerWord().getDefinition() + Const.LINE_SEP +
 							Const.LINE_SEP +
-							"Your Answer:" + tmpReport.getUserAnswerWord() +
-							Const.LINE_SEP +
-							tmpReport.getUserAnswerOptionNum() + "-" + tmpReport.getUserAnswerDefinition();
-
+							"Your Answer:" + Const.LINE_SEP +
+							qwl.getUserWord().getWord() + Const.LINE_SEP +
+							qwl.getUserOptionNum() + "-" + qwl.getUserWord().getDefinition();
+				System.out.println(answerTxt);
 				answer =
 						Text.builder()
 							.text(answerTxt)
 							.weight(TextWeight.BOLD)
+							.wrap(true)
 							.size(FlexFontSize.SM)
 							.build();
 
@@ -108,7 +111,7 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
 			
 			components.add(result);
 			components.add(answer);
-
+			i++;
 		}
 
         return Box.builder()

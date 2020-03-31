@@ -31,8 +31,7 @@ import lombok.NonNull;
 @LineMessageHandler
 public class WordController{
 	
-	
-	public static Map<String, QuizStatus> quizUserMap = new HashMap<String, QuizStatus>();
+	private Map<String,QuizStatus> userQuizStatusMap = new HashMap<String, QuizStatus>();
 
     @Autowired
     private LineMessagingClient lineMessagingClient;
@@ -51,72 +50,60 @@ public class WordController{
 		// QuizStatusをMapから取得・格納
 		final QuizStatus qs;
 		// mapに存在しないUserだったら新規追加する
-		if(!quizUserMap.containsKey(userId)){
+		if(!userQuizStatusMap.containsKey(userId)){
 			qs = new QuizStatus();
-			quizUserMap.put(userId, qs);
+			userQuizStatusMap.put(userId, qs);
 		}else{
-			qs = quizUserMap.get(userId);
+			qs = userQuizStatusMap.get(userId);
 		}
 
-		// TODO: バリデーション入れる
-
-
 		final int currentQuestionNum = qs.getCurrentQuestionNum();
+
 		if(currentQuestionNum == 0){
 
+			// リセット
+			qs.resetInstance();
+			
 			// 生成したクイズリストを元に、QuizMessage生成
 			QuizWordList qwl = ws.getQuizWordList();
-			qs.setLastQuizWordList(qwl);
+			qs.getQuizWordLists().add(qwl);
 			replyMessge = new QuizMessageSupplier().getQuizMessage(qwl);
 
 			qs.setCurrentQuestionNum(qs.getCurrentQuestionNum() + 1);
-		}else if(currentQuestionNum < Const.Quiz.QUESTION_NUM){
-			// 答え合わせ
-			checkAnswer(messageText, qs);
+		}else if(currentQuestionNum <= Const.Quiz.QUESTION_NUM){
+			// 答え格納
+			setUserAnswer(messageText, qs, currentQuestionNum -1);
 
 			// 生成したクイズリストを元に、QuizMessage生成
 			QuizWordList qwl = ws.getQuizWordList();
-			qs.setLastQuizWordList(qwl);
+			qs.getQuizWordLists().add(qwl);
 			replyMessge = new QuizMessageSupplier().getQuizMessage(qwl);
 
 			qs.setCurrentQuestionNum(qs.getCurrentQuestionNum() + 1);
 		}else{
-			// 答え合わせ
-			checkAnswer(messageText, qs);
+			// 答え格納
+			setUserAnswer(messageText, qs, currentQuestionNum -1);
 
-			// 問題数リセット
-			qs.setCurrentQuestionNum(0);
 
 			// レポート返信
-			replyMessge = new ReportMessageSupplier().getReportMessage(qs.getReports());
+			replyMessge = new ReportMessageSupplier().getReportMessage(qs.getQuizWordLists());
+
+
 		}
 
 		reply(replyToken, singletonList(replyMessge));
 
 	}
 
-	private void checkAnswer(String answer, QuizStatus qs){
-
-		Report report;
-
-		QuizWordList qwl = qs.getLastQuizWordList();
-		int answerOptionNum = qwl.getAnswerOptionNum();
-		String answerWord = qwl.getAnswerWord().getWord();
-		String answerDefinition = qwl.getAnswerWord().getDefinition();
-
-		if(answer.equals(Integer.toString(answerOptionNum))){
-			//　正解
-			report = new Report(true,answerWord,answerOptionNum,answerDefinition,null,0,null);
-		}else{
-			// 不正解
-			// TODO: 数字変換できないとき対応
-			int userAnswerOptionNum = Integer.parseInt(answer);
-			String userAnswerWord = qwl.getWords().get(userAnswerOptionNum).getWord();
-			String userAnswerDefinition = qwl.getWords().get(userAnswerOptionNum).getDefinition();
-			report = new Report(false,answerWord,answerOptionNum,answerDefinition,userAnswerWord,0,userAnswerDefinition);
+	private void setUserAnswer(String answer, QuizStatus qs, int lastQuestionNum){
+		int answerNum;
+		try {
+			answerNum = Integer.parseInt(answer);
+		} catch (NumberFormatException nfe) {
+			answerNum = 0;
 		}
+		qs.getQuizWordLists().get(lastQuestionNum).setUserOptionNum(answerNum);;
 
-		qs.getReports().add(report);
 	}
 
     private void reply(@NonNull String replyToken,
