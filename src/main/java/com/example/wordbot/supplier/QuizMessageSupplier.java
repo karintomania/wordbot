@@ -40,11 +40,11 @@ public class QuizMessageSupplier implements Supplier<FlexMessage> {
 
 	public FlexMessage getQuizMessage(final QuizWordList qwl) {
 		final Box bodyBlock = createBodyBlock(qwl);
-		final Box footerBlock = createFooterBlock(qwl.getWords());
+		// final Box footerBlock = createFooterBlock(qwl.getWords());
 		final Bubble bubble =
 				Bubble.builder()
 						.body(bodyBlock)
-						.footer(footerBlock)
+						// .footer(footerBlock)
 						.build();
 
 		return new FlexMessage("ALT", bubble);
@@ -58,35 +58,62 @@ public class QuizMessageSupplier implements Supplier<FlexMessage> {
     }
 
     private Box createBodyBlock(QuizWordList qwl) {
-        final Text title =
+
+		List<FlexComponent> quizComponents = new ArrayList<FlexComponent>();
+
+		// word
+        final Text questionWord =
                 Text.builder()
                     .text(qwl.getAnswerWord().getWord())
                     .weight(TextWeight.BOLD)
                     .size(FlexFontSize.XL)
-                    .build();
+					.build();
 
-		String questionStr = "Choose the meaning of the word." 
-							+ Const.LINE_SEP
-							+ Const.LINE_SEP;
+		quizComponents.add(questionWord);
 
+		
+
+		// Definition btn box
 		int i = 0;
-		for(Word w : qwl.getWords()){
-			questionStr += Integer.toString(i) + "-" + w.getDefinition()+ Const.LINE_SEP;
+		for(Word word : qwl.getWords()){
+			Box defBtnBox = createDefBtnBox(i, word);
+
+			quizComponents.add(defBtnBox);
 			i++;
 		}
 
-        final Text question =
-                Text.builder()
-                    .text(questionStr)
-					.weight(TextWeight.BOLD)
-					.wrap(true)
-                    .size(FlexFontSize.Md)
-                    .build();
 
         return Box.builder()
                   .layout(FlexLayout.VERTICAL)
-                  .contents(asList(title, question))
+                  .contents(quizComponents)
                   .build();
+	}
+
+
+    private Box createDefBtnBox(int optionNum, Word word) {
+		
+		Text def = Text.builder()
+						.size(FlexFontSize.Md)
+						.flex(5)
+						.wrap(true)
+						.text(word.getDefinition())
+						.build();
+		
+		Button btn = Button.builder()
+								.style(ButtonStyle.PRIMARY)
+								.flex(1)
+								.color(Const.Quiz.BOTTUN_COLORS.get(optionNum))
+								.height(ButtonHeight.SMALL)
+								.action(new MessageAction(Integer.toString(optionNum + 1), Integer.toString(optionNum + 1)))
+								.build();
+
+		Box defBtnBox = Box.builder()
+						.layout(FlexLayout.HORIZONTAL)
+						.margin(FlexMarginSize.LG)
+						.contents(asList(def, btn))
+						.build();
+
+		return defBtnBox;
 	}
 
     private Box createFooterBlock(List<Word> words) {

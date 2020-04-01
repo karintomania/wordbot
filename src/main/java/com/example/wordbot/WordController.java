@@ -98,7 +98,7 @@ public class WordController{
 	private void setUserAnswer(String answer, QuizStatus qs, int lastQuestionNum){
 		int answerNum;
 		try {
-			answerNum = Integer.parseInt(answer);
+			answerNum = Integer.parseInt(answer) - 1;
 		} catch (NumberFormatException nfe) {
 			answerNum = 0;
 		}

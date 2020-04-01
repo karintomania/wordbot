@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import com.example.wordbot.Const;
 import com.example.wordbot.quiz.QuizWordList;
 import com.linecorp.bot.model.action.MessageAction;
 import com.linecorp.bot.model.action.URIAction;
@@ -61,10 +62,14 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
     private Box createBodyBlock(List<QuizWordList> qwls) {
 		List<FlexComponent> components = new ArrayList<FlexComponent>();
 
+		int totalQuestionCount = qwls.size();
+		int correctAnswerCount = countCorrectAnswer(qwls);	
+		// ex) Result 3/5
+		String resultStr = "Result " + Integer.toString(correctAnswerCount) + "/" + Integer.toString(totalQuestionCount);
 		// title
         final Text title =
                 Text.builder()
-                    .text("Result")
+                    .text(resultStr)
                     .weight(TextWeight.BOLD)
                     .size(FlexFontSize.XL)
 					.build();
@@ -86,14 +91,25 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
 				  .spacing(FlexMarginSize.SM)
                   .contents(components)
                   .build();
-    }
+	}
+	
+	// count correct answer from quiz word lists
+	private int countCorrectAnswer(List<QuizWordList> qwls){
+		return qwls.stream()
+				.reduce(0,
+				(count, qwl) -> {
+					boolean isCorrectAnswer = qwl.getAnswerOptionNum()==qwl.getUserOptionNum();
+					return count + (isCorrectAnswer ? 1 : 0);
+				}, Integer::sum);
+	}
+
 
     private Box createFooterBlock() {
         final Button callAction = Button
                 .builder()
                 .style(ButtonStyle.PRIMARY)
                 .height(ButtonHeight.SMALL)
-                .action(new MessageAction("One More Test", "quiz"))
+                .action(new MessageAction("One More Try", "One More"))
                 .build();
 
 				
@@ -114,7 +130,7 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
 		boolean isCorrect = qwl.getAnswerOptionNum() == qwl.getUserOptionNum();
 
 		// Q1 Correct! or Wrong...
-		String quizTitleStr = "Q" + Integer.toString(questionNum) + (isCorrect ? " Correct!" : " Wrong...");
+		String quizTitleStr = "Q" + Integer.toString(questionNum + 1) + (isCorrect ? " Correct!" : " Wrong...");
 		Text quizTitle = Text.builder()
 							.text(quizTitleStr)
 							.weight(TextWeight.BOLD)
@@ -185,13 +201,13 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
 									.size(FlexFontSize.SM)
 									.build();
 
-			// btn
+			// more btn
+			String moreUrl = Const.Quiz.DICTIONARY_URL + word;
 			Button btn = Button.builder()
-									.offsetStart(FlexOffsetSize.SM)
 									.flex(2)
 									.style(ButtonStyle.LINK)
 									.height(ButtonHeight.SMALL)
-									.action(new URIAction("more", URI.create("https://google.com"), null))
+									.action(new URIAction("more", URI.create(moreUrl), null))
 									.build();
 
 		Box definitionBtnBox = Box.builder()
