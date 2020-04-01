@@ -2,26 +2,37 @@ package com.example.wordbot.supplier;
 
 import static java.util.Arrays.asList;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-import com.example.wordbot.Const;
 import com.example.wordbot.quiz.QuizWordList;
-import com.example.wordbot.quiz.Report;
 import com.linecorp.bot.model.action.MessageAction;
+import com.linecorp.bot.model.action.URIAction;
+import com.linecorp.bot.model.action.URIAction.AltUri;
 import com.linecorp.bot.model.message.FlexMessage;
 import com.linecorp.bot.model.message.flex.component.Box;
 import com.linecorp.bot.model.message.flex.component.Button;
-import com.linecorp.bot.model.message.flex.component.FlexComponent;
 import com.linecorp.bot.model.message.flex.component.Button.ButtonHeight;
 import com.linecorp.bot.model.message.flex.component.Button.ButtonStyle;
+import com.linecorp.bot.model.message.flex.component.FlexComponent;
+import com.linecorp.bot.model.message.flex.component.Icon;
+import com.linecorp.bot.model.message.flex.component.Image;
+import com.linecorp.bot.model.message.flex.component.Separator;
+import com.linecorp.bot.model.message.flex.component.Image.ImageAspectMode;
+import com.linecorp.bot.model.message.flex.component.Image.ImageAspectRatio;
+import com.linecorp.bot.model.message.flex.component.Image.ImageSize;
+import com.linecorp.bot.model.message.flex.component.Spacer;
 import com.linecorp.bot.model.message.flex.component.Text;
 import com.linecorp.bot.model.message.flex.component.Text.TextWeight;
 import com.linecorp.bot.model.message.flex.container.Bubble;
 import com.linecorp.bot.model.message.flex.unit.FlexFontSize;
 import com.linecorp.bot.model.message.flex.unit.FlexLayout;
 import com.linecorp.bot.model.message.flex.unit.FlexMarginSize;
+import com.linecorp.bot.model.message.flex.unit.FlexOffsetSize;
+
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 public class ReportMessageSupplier implements Supplier<FlexMessage> {
 
@@ -49,7 +60,6 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
 
     private Box createBodyBlock(List<QuizWordList> qwls) {
 		List<FlexComponent> components = new ArrayList<FlexComponent>();
-		int i = 0;
 
 		// title
         final Text title =
@@ -60,57 +70,14 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
 					.build();
 		components.add(title);
 
-		Text result;
-		Text answer;
-		String answerTxt;
+		int i = 0;
 
 		for(QuizWordList qwl : qwls){
 
-			if(qwl.getAnswerOptionNum() == qwl.getUserOptionNum()){
-				result = Text.builder()
-						.text("Q"+ Integer.toString(i) + ": " + qwl.getAnswerWord().getWord() + " Correct!")
-						.weight(TextWeight.BOLD)
-						.size(FlexFontSize.Md)
-						.build();
+			// Box of each quiz
+			Box quizBox = createQuizBox(qwl, i);
+			components.add(quizBox);
 
-				answerTxt = qwl.getAnswerOptionNum() + "-" + qwl.getAnswerWord().getDefinition();
-
-				answer =
-						Text.builder()
-							.text(answerTxt)
-							.weight(TextWeight.BOLD)
-							.wrap(true)
-							.size(FlexFontSize.SM)
-							.build();
-
-			}else{
-
-				result =
-						Text.builder()
-							.text("Q"+ Integer.toString(i) + ": " + qwl.getAnswerWord().getWord() + " Wrong...")
-							.weight(TextWeight.BOLD)
-							.size(FlexFontSize.Md)
-							.build();
-
-				answerTxt = 
-							qwl.getAnswerOptionNum() + "-" + qwl.getAnswerWord().getDefinition() + Const.LINE_SEP +
-							Const.LINE_SEP +
-							"Your Answer:" + Const.LINE_SEP +
-							qwl.getUserWord().getWord() + Const.LINE_SEP +
-							qwl.getUserOptionNum() + "-" + qwl.getUserWord().getDefinition();
-				System.out.println(answerTxt);
-				answer =
-						Text.builder()
-							.text(answerTxt)
-							.weight(TextWeight.BOLD)
-							.wrap(true)
-							.size(FlexFontSize.SM)
-							.build();
-
-			}
-			
-			components.add(result);
-			components.add(answer);
 			i++;
 		}
 
@@ -135,6 +102,117 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
                   .spacing(FlexMarginSize.SM)
                   .contents(asList(callAction))
                   .build();
+	}
+
+	private Box createQuizBox(QuizWordList qwl, int questionNum){
+
+		List<FlexComponent> quizComponents = new ArrayList<FlexComponent>();
+		String answerWord = qwl.getAnswerWord().getWord();
+		String answerDef = qwl.getAnswerWord().getDefinition();
+		String userWord = qwl.getUserWord().getWord();
+		String userDef = qwl.getUserWord().getDefinition();
+		boolean isCorrect = qwl.getAnswerOptionNum() == qwl.getUserOptionNum();
+
+		// Q1 Correct! or Wrong...
+		String quizTitleStr = "Q" + Integer.toString(questionNum) + (isCorrect ? " Correct!" : " Wrong...");
+		Text quizTitle = Text.builder()
+							.text(quizTitleStr)
+							.weight(TextWeight.BOLD)
+							.margin(FlexMarginSize.XL)
+							.size(FlexFontSize.XL)
+							.build();
+
+		quizComponents.add(quizTitle);
+		// Correct word box
+		Box correctWordBox = createWordBox(true, answerWord, answerDef);
+		quizComponents.add(correctWordBox);
+		
+		// Wrong word
+		if(!isCorrect){
+			Box wrongWordBox = createWordBox(false, userWord, userDef);
+			quizComponents.add(wrongWordBox);
+		}
+
+		// Separater
+		Separator separator= Separator.builder().margin(FlexMarginSize.XL).color("#999999").build();
+		quizComponents.add(separator);
+
+		// Spacer
+		Spacer spacer = Spacer.builder().size(FlexMarginSize.XL).build();
+		quizComponents.add(spacer);
+
+
+		Box quizBox = Box.builder()
+								.layout(FlexLayout.VERTICAL)
+								.spacing(FlexMarginSize.SM)
+								.contents(quizComponents)
+								.build();
+		
+		return quizBox;
+
+	}
+
+	private Box createWordBox(boolean isCorrect, String word, String definition){
+
+		// icon and word box
+			// tick icon
+			URI imageUrl = createUri(isCorrect? "tick.png" : "cross.png");
+			Icon icon = Icon.builder()
+									.size(FlexFontSize.Md)
+									.url(imageUrl.toString())
+									.build();
+			// word
+			Text wordText = Text.builder()
+									.text(word)
+									.offsetStart(FlexOffsetSize.MD)
+									.flex(2)
+									.weight(TextWeight.BOLD)
+									.size(FlexFontSize.LG)
+									.build();
+
+		Box iconWordBox = Box.builder()
+								.layout(FlexLayout.BASELINE)
+								.margin(FlexMarginSize.XL)
+								.contents(asList(icon, wordText))
+								.build();
+		// definition and btn
+			// meaning
+			Text definitionText = Text.builder()
+									.text(definition)
+									.flex(4)
+									.wrap(true)
+									.weight(TextWeight.BOLD)
+									.size(FlexFontSize.SM)
+									.build();
+
+			// btn
+			Button btn = Button.builder()
+									.offsetStart(FlexOffsetSize.SM)
+									.flex(2)
+									.style(ButtonStyle.LINK)
+									.height(ButtonHeight.SMALL)
+									.action(new URIAction("more", URI.create("https://google.com"), null))
+									.build();
+
+		Box definitionBtnBox = Box.builder()
+								.layout(FlexLayout.HORIZONTAL)
+								.margin(FlexMarginSize.LG)
+								.contents(asList(definitionText, btn))
+								.build();
+
+		Box wordBox = Box.builder()
+								.layout(FlexLayout.VERTICAL)
+								.margin(FlexMarginSize.SM)
+								.contents(asList(iconWordBox, definitionBtnBox))
+								.build();
+		return wordBox;
+	}
+
+    private static URI createUri(String path) {
+        return ServletUriComponentsBuilder.fromCurrentContextPath()
+                                          .scheme("https")
+                                          .path(path).build()
+                                          .toUri();
     }
 
 }

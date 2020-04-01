@@ -61,8 +61,6 @@ public class WordController{
 
 		if(currentQuestionNum == 0){
 
-			// リセット
-			qs.resetInstance();
 			
 			// 生成したクイズリストを元に、QuizMessage生成
 			QuizWordList qwl = ws.getQuizWordList();
@@ -70,7 +68,7 @@ public class WordController{
 			replyMessge = new QuizMessageSupplier().getQuizMessage(qwl);
 
 			qs.setCurrentQuestionNum(qs.getCurrentQuestionNum() + 1);
-		}else if(currentQuestionNum <= Const.Quiz.QUESTION_NUM){
+		}else if(currentQuestionNum < Const.Quiz.QUESTION_NUM){
 			// 答え格納
 			setUserAnswer(messageText, qs, currentQuestionNum -1);
 
@@ -88,6 +86,8 @@ public class WordController{
 			// レポート返信
 			replyMessge = new ReportMessageSupplier().getReportMessage(qs.getQuizWordLists());
 
+			// リセット
+			qs.resetInstance();
 
 		}
 
