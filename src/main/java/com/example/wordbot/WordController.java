@@ -65,7 +65,7 @@ public class WordController{
 			// 生成したクイズリストを元に、QuizMessage生成
 			QuizWordList qwl = ws.getQuizWordList();
 			qs.getQuizWordLists().add(qwl);
-			replyMessge = new QuizMessageSupplier().getQuizMessage(qwl);
+			replyMessge = new QuizMessageSupplier().getQuizMessage(currentQuestionNum, qwl);
 
 			qs.setCurrentQuestionNum(qs.getCurrentQuestionNum() + 1);
 		}else if(currentQuestionNum < Const.Quiz.QUESTION_NUM){
@@ -75,7 +75,7 @@ public class WordController{
 			// 生成したクイズリストを元に、QuizMessage生成
 			QuizWordList qwl = ws.getQuizWordList();
 			qs.getQuizWordLists().add(qwl);
-			replyMessge = new QuizMessageSupplier().getQuizMessage(qwl);
+			replyMessge = new QuizMessageSupplier().getQuizMessage(currentQuestionNum, qwl);
 
 			qs.setCurrentQuestionNum(qs.getCurrentQuestionNum() + 1);
 		}else{

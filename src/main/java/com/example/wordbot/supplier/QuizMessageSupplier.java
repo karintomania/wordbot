@@ -38,8 +38,8 @@ public class QuizMessageSupplier implements Supplier<FlexMessage> {
 	WordMapper wm;
 
 
-	public FlexMessage getQuizMessage(final QuizWordList qwl) {
-		final Box bodyBlock = createBodyBlock(qwl);
+	public FlexMessage getQuizMessage(int currentQuestionNum, final QuizWordList qwl) {
+		final Box bodyBlock = createBodyBlock(currentQuestionNum, qwl);
 		// final Box footerBlock = createFooterBlock(qwl.getWords());
 		final Bubble bubble =
 				Bubble.builder()
@@ -57,14 +57,16 @@ public class QuizMessageSupplier implements Supplier<FlexMessage> {
 		return null;
     }
 
-    private Box createBodyBlock(QuizWordList qwl) {
+    private Box createBodyBlock(int currentQuestionNum, QuizWordList qwl) {
 
 		List<FlexComponent> quizComponents = new ArrayList<FlexComponent>();
 
-		// word
+		// Q1/5 word
+		String questionNumAndWord = "Q" + Integer.toString(currentQuestionNum + 1) + "/" + Integer.toString(Const.Quiz.QUESTION_NUM) + " "; 
+		questionNumAndWord += qwl.getAnswerWord().getWord();
         final Text questionWord =
                 Text.builder()
-                    .text(qwl.getAnswerWord().getWord())
+                    .text(questionNumAndWord)
                     .weight(TextWeight.BOLD)
                     .size(FlexFontSize.XL)
 					.build();
