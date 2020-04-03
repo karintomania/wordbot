@@ -41,12 +41,14 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
     public FlexMessage getReportMessage(List<QuizWordList> qwls) {
 
         final Box bodyBlock = createBodyBlock(qwls);
+        final Image heroBlock = createHeroBlock(qwls);
         final Box footerBlock = createFooterBlock();
         final Bubble bubble =
-                Bubble.builder()
-                      .body(bodyBlock)
-                      .footer(footerBlock)
-                      .build();
+				Bubble.builder()
+						.hero(heroBlock)
+						.body(bodyBlock)
+						.footer(footerBlock)
+						.build();
 
         return new FlexMessage("ALT", bubble);
 	}
@@ -58,6 +60,20 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
 	}
 	
 
+    private Image createHeroBlock(List<QuizWordList> qwls) {
+
+		int correctAnswerCount = countCorrectAnswer(qwls);	
+
+		URI imageUrl = createUri(Const.Quiz.HERO_IMAGE_LIST.get(correctAnswerCount));
+		Image image = Image.builder()
+                     .url(imageUrl)
+                     .size(ImageSize.FULL_WIDTH)
+                     .aspectRatio(ImageAspectRatio.R20TO13)
+                     .aspectMode(ImageAspectMode.Cover)
+					.build();
+
+		return image;
+	}
 
     private Box createBodyBlock(List<QuizWordList> qwls) {
 		List<FlexComponent> components = new ArrayList<FlexComponent>();
@@ -75,6 +91,16 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
 					.build();
 		components.add(title);
 
+		// comment
+		String commentStr = Const.Quiz.COMMENT_LIST.get(correctAnswerCount);
+        final Text comment =
+                Text.builder()
+                    .text(commentStr)
+                    .weight(TextWeight.BOLD)
+					.size(FlexFontSize.Md)
+					.color("#777777")
+					.build();
+		components.add(comment);
 		int i = 0;
 
 		for(QuizWordList qwl : qwls){
@@ -120,6 +146,7 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
                   .build();
 	}
 
+	// Create Each Quiz Result Report
 	private Box createQuizBox(QuizWordList qwl, int questionNum){
 
 		List<FlexComponent> quizComponents = new ArrayList<FlexComponent>();
@@ -197,7 +224,7 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
 									.text(definition)
 									.flex(4)
 									.wrap(true)
-									.weight(TextWeight.BOLD)
+									.color("#777777")
 									.size(FlexFontSize.SM)
 									.build();
 
