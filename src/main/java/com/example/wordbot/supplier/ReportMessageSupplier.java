@@ -202,7 +202,7 @@ public class ReportMessageSupplier implements Supplier<FlexMessage> {
 			URI imageUrl = createUri(isCorrect? "tick.png" : "cross.png");
 			Icon icon = Icon.builder()
 									.size(FlexFontSize.Md)
-									.url(imageUrl.toString())
+									.url(imageUrl)
 									.build();
 			// word
 			Text wordText = Text.builder()
